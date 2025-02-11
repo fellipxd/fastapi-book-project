@@ -36,7 +36,7 @@ jobs:
           # SSH into the server and deploy
           ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << 'ENDSSH'
             # Deployment commands on the server
-            cd C:\Users\phili\desktop\pandora\hng\backend\fastapi-book-project
+            cd C:/Users/phili/desktop/pandora/hng/backend/fastapi-book-project
             git pull origin main
 
             # Ensure Python 3.12.4 is available
