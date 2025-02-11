@@ -1,12 +1,15 @@
-name: CD Pipeline
+name: CI Pipeline
 
 on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  deploy:
+  test:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,37 +22,18 @@ jobs:
           python-version: "3.12.4"
           cache: "pip"
 
-      - name: Configure SSH
-        uses: webfactory/ssh-agent@v0.7.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Deploy to Production
-        env:
-          SERVER_IP: ${{ secrets.SERVER_IP }}
-          SERVER_USER: ${{ secrets.SERVER_USER }}
+      - name: Install dependencies
         run: |
-          mkdir -p ~/.ssh
-          echo "StrictHostKeyChecking no" >> ~/.ssh/config
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov pytest-asyncio
 
-          # SSH into the server and deploy
-          ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << 'ENDSSH'
-            # Deployment commands on the server
-            cd C:\Users\phili\desktop\pandora\hng\backend\fastapi-book-project
-            git pull origin main
+      - name: Run tests and coverage
+        run: |
+          pytest --cov=./ --cov-report=xml --asyncio-mode=auto
 
-            # Ensure Python 3.12.4 is available
-            pyenv install 3.12.4 || true
-            pyenv global 3.12.4
-
-            # Update virtual environment
-            python -m venv venv --clear
-            source venv/bin/activate
-
-            # Install dependencies
-            python -m pip install --upgrade pip
-            pip install -r requirements.txt
-
-            # Restart the FastAPI service
-            sudo systemctl restart fastapi-app
-          ENDSSH
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml

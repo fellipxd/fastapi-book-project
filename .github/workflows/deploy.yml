@@ -29,25 +29,28 @@ jobs:
           SERVER_IP: ${{ secrets.SERVER_IP }}
           SERVER_USER: ${{ secrets.SERVER_USER }}
         run: |
+          # Configure SSH on the GitHub Runner
           mkdir -p ~/.ssh
           echo "StrictHostKeyChecking no" >> ~/.ssh/config
 
-          ssh $SERVER_USER@$SERVER_IP << 'ENDSSH'
-            cd /path/to/your/app
+          # SSH into the server and deploy
+          ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << 'ENDSSH'
+            # Deployment commands on the server
+            cd C:\Users\phili\desktop\pandora\hng\backend\fastapi-book-project
             git pull origin main
-            
+
             # Ensure Python 3.12.4 is available
             pyenv install 3.12.4 || true
             pyenv global 3.12.4
-            
+
             # Update virtual environment
             python -m venv venv --clear
             source venv/bin/activate
-            
+
             # Install dependencies
             python -m pip install --upgrade pip
             pip install -r requirements.txt
-            
+
             # Restart the FastAPI service
             sudo systemctl restart fastapi-app
           ENDSSH
